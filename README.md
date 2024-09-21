@@ -52,3 +52,17 @@ npm install vitest @testing-library/react @testing-library/jest-dom jsdom
 ```bash
 npm test
 ```
+
+
+version 2.0
+
+test uchun mock store dan foydalanamiz
+
+```bash
+npm i --save-dev @types/redux-mock-store
+```
+bu versiyada redux toolkit dan foydalanamiz. Statelarni saqlash uchun
+
+```bash
+npm install @reduxjs/toolkit
+```

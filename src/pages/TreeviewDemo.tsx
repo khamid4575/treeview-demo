@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Treeview from "../components/Treeview/Treeview";
 import { TreeNode } from "../components/Treeview/Treeview.types";
 
@@ -19,33 +18,13 @@ const demoData: TreeNode[] = [
       { label: "Qovun", id: "2.2" },
     ],
   },
-  {
-    label: "Sabzavotlar",
-    id: "3",
-    children: [
-      { label: "Sabzi", id: "3.1" },
-      { label: "Kartoshka", id: "3.2" },
-      { label: "Piyoz", id: "3.3" },
-      { label: "Lavlagi", id: "3.4" },
-    ],
-  },
 ];
 
 const TreeviewDemo = () => {
-  const [_, setSelected] = useState<string[]>([]);
-
-  const handleSelectionChange = (selectedIds: string[]) => {
-    setSelected(selectedIds);
-  };
-
   return (
-    <div className="flex flex-col justify-center items-center  mx-auto">
-      <h1 className="font-bold text-5xl text-purple-400">Treeview Demo</h1>
-      <Treeview
-        data={demoData}
-        onSelectionChange={handleSelectionChange}
-        customLabel={(node) => `${node.label}`}
-      />
+    <div>
+      <h1 className="text-5xl text-purple-400 font-bold text-center mb-5">Treeview Demo</h1>
+      <Treeview data={demoData} />
     </div>
   );
 };

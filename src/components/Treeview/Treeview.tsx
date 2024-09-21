@@ -1,110 +1,61 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { TreeNode, TreeviewProps } from "./Treeview.types";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleOpen, toggleSelect } from "../../redux/treeviewSlice";
+import { TreeNode } from "./Treeview.types";
 
-const Treeview: React.FC<TreeviewProps> = ({
-  data,
-  onSelectionChange,
-  customLabel,
-  customRenderNode,
-}) => {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [openNodeIds, setOpenNodeIds] = useState<Set<string>>(new Set());
-  const [searchParams, setSearchParams] = useSearchParams();
+interface TreeviewProps {
+  data: TreeNode[];
+}
 
-  // Load saved selections and open nodes from query or localStorage
-  useEffect(() => {
-    const savedSelectionsFromQuery = searchParams.get("selectedIds");
-    const savedOpenNodesFromQuery = searchParams.get("openNodeIds");
+const Treeview: React.FC<TreeviewProps> = ({ data }) => {
+  const dispatch = useDispatch();
+  const selectedIds = useSelector((state: any) => state.treeview.selectedIds);
+  const openNodeIds = useSelector((state: any) => state.treeview.openNodeIds);
 
-    if (savedSelectionsFromQuery) {
-      setSelectedIds(new Set(savedSelectionsFromQuery.split(",")));
-    }
+  const renderTree = (nodes: TreeNode[]) => {
+    return nodes.map((node) => {
+      const isOpen = openNodeIds.includes(node.id);
+      const isChecked = selectedIds.includes(node.id);
 
-    if (savedOpenNodesFromQuery) {
-      setOpenNodeIds(new Set(savedOpenNodesFromQuery.split(",")));
-    }
-  }, [searchParams]);
+      return (
+        <div key={node.id} className="pl-4 border-l border-gray-300">
 
-  // Update query with selected and open IDs
-  useEffect(() => {
-    setSearchParams({
-      selectedIds: [...selectedIds].join(","),
-      openNodeIds: [...openNodeIds].join(","),
-    });
-  }, [selectedIds, openNodeIds, setSearchParams]);
+          <div className="flex items-center space-x-2 py-1 hover:bg-gray-50 rounded transition">
+            {node.children && node.children.length !== 0 && (
+              <button
+                onClick={() => dispatch(toggleOpen(node.id))}
+                className="focus:outline-none text-gray-600 hover:text-gray-900"
+              >
+                <i
+                  className={`bx bx-chevron-${
+                    isOpen ? "down" : "right"
+                  } text-xl`}
+                />
+              </button>
+            )}
 
-  // Toggle selection for current node and its children
-  const toggleSelect = useCallback(
-    (id: string, children: TreeNode[] = []) => {
-      const newSelectedIds = new Set(selectedIds);
-
-      const selectNode = (nodeId: string, select: boolean) => {
-        if (select) {
-          newSelectedIds.add(nodeId);
-        } else {
-          newSelectedIds.delete(nodeId);
-        }
-      };
-
-      // Toggle current node and its children
-      const isSelected = newSelectedIds.has(id);
-      selectNode(id, !isSelected);
-      children.forEach((child) => selectNode(child.id, !isSelected));
-
-      setSelectedIds(newSelectedIds);
-      onSelectionChange([...newSelectedIds]);
-    },
-    [selectedIds, onSelectionChange]
-  );
-
-  // Toggle open/close state
-  const toggleOpen = useCallback(
-    (id: string) => {
-      const newOpenNodeIds = new Set(openNodeIds);
-      newOpenNodeIds.has(id)
-        ? newOpenNodeIds.delete(id)
-        : newOpenNodeIds.add(id);
-      setOpenNodeIds(newOpenNodeIds);
-    },
-    [openNodeIds]
-  );
-
-  // Recursive render function
-  const renderTreeNodes = (nodes: TreeNode[]) =>
-    nodes.map((node) => (
-      <div key={node.id} className="text-lg">
-        <div className="flex items-center">
-          {node.children && node.children?.length !== 0 && (
-            <button onClick={() => toggleOpen(node.id)}>
-              <i
-                className={`bx text-3xl text-gray-600 bx-chevron-${
-                  openNodeIds.has(node.id) ? "down" : "right"
-                }`}
+            <label className={`flex items-center space-x-2 ${node.children?.length ? "" : "ml-7"}`}>
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => dispatch(toggleSelect({ id: node.id, data }))}
+                className="h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-gray-300 rounded"
               />
-            </button>
-          )}
-          <label className={node.children?.length ? "" : "ml-[30px]"}>
-            <input
-              type="checkbox"
-              checked={selectedIds.has(node.id)}
-              onChange={() => toggleSelect(node.id, node.children || [])}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-1 mr-1"
-            />
-            {customLabel ? customLabel(node) : node.label}
-          </label>
-        </div>
-        {node.children && openNodeIds.has(node.id) && (
-          <div className="pl-6">
-            {customRenderNode
-              ? customRenderNode(node)
-              : renderTreeNodes(node.children)}
+              <span className="text-gray-800 hover:text-blue-600 transition font-medium">
+                {node.label}
+              </span>
+            </label>
           </div>
-        )}
-      </div>
-    ));
 
-  return <div className="my-4">{renderTreeNodes(data)}</div>;
+          {isOpen && node.children && (
+            <div className="pl-4">{renderTree(node.children)}</div>
+          )}
+        </div>
+      );
+    });
+  };
+
+  return <div className="max-w-lg mx-auto p-4 bg-white shadow-md rounded-md">{renderTree(data)}</div>;
 };
 
 export default Treeview;
